@@ -354,7 +354,7 @@ class PresupuestoScreen extends ConsumerWidget {
     );
 
     // Obtener información del presupuesto actual
-    final currentCurrency = ref.read(currencyProvider);
+    final currentCurrency = ref.watch(currencyProvider);
 
     // Definir ícono y color según la categoría
     IconData categoryIcon;
