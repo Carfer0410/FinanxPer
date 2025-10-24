@@ -767,12 +767,7 @@ class PresupuestoScreen extends ConsumerWidget {
                   ),
                   
                   // Sliders de Categoría
-                  _buildInfoItem(
-                    icon: Icons.linear_scale,
-                    color: Colors.teal,
-                    title: 'Controles por Categoría',
-                    description: 'Desliza para distribuir tu presupuesto entre diferentes categorías.',
-                  ),
+                  
                 ],
               ),
             ),

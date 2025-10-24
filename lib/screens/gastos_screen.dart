@@ -60,34 +60,35 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Selector de mes/año
-            const MonthYearSelector(
-              showCopyButton: false,
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Formulario para agregar gastos
-            Card(
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Agregar Nuevo Gasto',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Campo de monto
+      body: Column(
+        children: [
+          // Header compacto con selector y formulario
+          Container(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              children: [
+                // Selector de mes/año
+                const MonthYearSelector(
+                  showCopyButton: false,
+                ),
+                
+                const SizedBox(height: 8),
+                
+                // Formulario para agregar gastos (más compacto)
+                Card(
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Agregar Nuevo Gasto',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 12),                      // Campo de monto
                       Consumer(
                         builder: (context, ref, child) {
                           final currencySymbol = ref.watch(currencySymbolProvider);
@@ -98,6 +99,7 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
                               labelText: 'Monto',
                               prefixText: '$currencySymbol ',
                               border: const OutlineInputBorder(),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                             ),
                             keyboardType: TextInputType.number,
                             inputFormatters: [
@@ -120,7 +122,7 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
                         },
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
 
                       // Campo de descripción
                       TextFormField(
@@ -128,6 +130,7 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Descripción',
                           border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -137,7 +140,7 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
                         },
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
 
                       // Selector de categoría
                       DropdownButtonFormField<String>(
@@ -145,6 +148,7 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Categoría',
                           border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                         ),
                         items: _categorias.map((categoria) {
                           return DropdownMenuItem<String>(
@@ -165,7 +169,7 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
                         },
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
 
                       // Botón de agregar
                       SizedBox(
@@ -173,7 +177,7 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
                         child: ElevatedButton(
                           onPressed: _agregarGasto,
                           style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                           child: const Text('Agregar Gasto'),
                         ),
@@ -184,33 +188,46 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
               ),
             ),
 
-            const SizedBox(height: 16),
-
-            // Lista de gastos
-            if (gastos.isEmpty)
-              const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: Center(
-                    child: Text(
-                      'No hay gastos registrados para este mes',
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
+              ],
+            ),
+          ),
+          
+          // Lista de gastos con scroll independiente - Área ampliada para mayor comodidad
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
+              child: gastos.isEmpty
+                ? Card(
+                    child: Container(
+                      padding: const EdgeInsets.all(40.0),
+                      child: const Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.receipt_long, size: 48, color: Colors.grey),
+                            SizedBox(height: 16),
+                            Text(
+                              'No hay gastos registrados para este mes',
+                              style: TextStyle(fontSize: 16, color: Colors.grey),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              )
-            else
-              Container(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.6,
-                ),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: gastos.length,
+                  )
+                : ListView.builder(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(top: 8),
+                    itemCount: gastos.length,
                   itemBuilder: (context, index) {
                     final gasto = gastos[index];
                     return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: Dismissible(
                         key: Key(gasto.id.toString()),
                         direction: DismissDirection.endToStart,
@@ -281,29 +298,50 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
                           // se maneja en confirmDismiss
                         },
                         child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           leading: CircleAvatar(
+                            radius: 24,
                             backgroundColor: _getColorCategoria(gasto.categoria),
                             child: Text(
                               gasto.categoria[0],
-                              style: const TextStyle(color: Colors.white),
+                              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                           ),
                           title: Text(
                             gasto.descripcion,
                             overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                           ),
-                          subtitle: Text(
-                            DateFormat('dd/MM/yyyy HH:mm').format(gasto.fecha),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Row(
+                              children: [
+                                Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                                const SizedBox(width: 4),
+                                Text(
+                                  DateFormat('dd/MM/yyyy HH:mm').format(gasto.fecha),
+                                  style: TextStyle(color: Colors.grey[600]),
+                                ),
+                              ],
+                            ),
                           ),
                           trailing: Consumer(
                             builder: (context, ref, child) {
                               final montoFormateado = ref.watch(gastosFormateadosProvider(gasto));
-                              return Text(
-                                montoFormateado,
-                                style: const TextStyle(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.red[50],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.red[200]!),
+                                ),
+                                child: Text(
+                                  montoFormateado,
+                                  style: TextStyle(
+                                    color: Colors.red[700],
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               );
                             },
@@ -313,9 +351,9 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
                     );
                   },
                 ),
-              ),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -362,9 +400,17 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
       }
       
       try {
-        // Obtener la fecha seleccionada
+        // Obtener la fecha seleccionada y combinar con la hora actual
         final fechaSeleccionada = ref.read(dateSelectionProvider);
-        final fechaGasto = DateTime(fechaSeleccionada.year, fechaSeleccionada.month, DateTime.now().day);
+        final ahora = DateTime.now();
+        final fechaGasto = DateTime(
+          fechaSeleccionada.year, 
+          fechaSeleccionada.month, 
+          ahora.day, 
+          ahora.hour, 
+          ahora.minute, 
+          ahora.second
+        );
 
         final nuevoGasto = Gasto(
           id: 0, // El provider generará un ID válido automáticamente
@@ -644,17 +690,29 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error, color: Colors.red[600]),
             const SizedBox(width: 8),
-            const Text('Presupuesto Excedido'),
+            const Flexible(
+              child: Text(
+                'Presupuesto Excedido',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('El gasto de ${currency.formatAmount(montoNuevo)} excede el presupuesto disponible para "$categoria".'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'El gasto de ${currency.formatAmount(montoNuevo)} excede el presupuesto disponible para "$categoria".',
+                style: const TextStyle(fontSize: 14),
+              ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
@@ -674,7 +732,8 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
                 ],
               ),
             ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -711,20 +770,29 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error_outline, color: Colors.red[600]),
             const SizedBox(width: 8),
-            const Text('Gasto ilógico'),
+            const Flexible(
+              child: Text(
+                'Gasto ilógico',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'No puedes registrar un gasto de ${currency.formatAmount(montoGasto)} cuando tu presupuesto general es de ${currency.formatAmount(presupuestoTotal)}.',
-              style: const TextStyle(fontSize: 16),
-            ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'No puedes registrar un gasto de ${currency.formatAmount(montoGasto)} cuando tu presupuesto general es de ${currency.formatAmount(presupuestoTotal)}.',
+                style: const TextStyle(fontSize: 14),
+              ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -753,7 +821,8 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
               '• Divide el gasto en varios registros más pequeños',
               style: TextStyle(fontSize: 14),
             ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -783,13 +852,26 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12)),
-          Text(
-            value, 
-            style: TextStyle(
-              fontSize: 12, 
-              fontWeight: FontWeight.bold,
-              color: valueColor,
+          Flexible(
+            flex: 3,
+            child: Text(
+              label, 
+              style: const TextStyle(fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            flex: 2,
+            child: Text(
+              value, 
+              style: TextStyle(
+                fontSize: 12, 
+                fontWeight: FontWeight.bold,
+                color: valueColor,
+              ),
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
             ),
           ),
         ],
