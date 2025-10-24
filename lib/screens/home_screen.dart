@@ -440,7 +440,7 @@ class HomeScreen extends ConsumerWidget {
                   child: Icon(icono, color: color, size: 24),
                 ),
                 const SizedBox(width: 12),
-                Flexible(
+                Expanded(
                   child: Text(
                     titulo,
                     style: TextStyle(
@@ -449,7 +449,9 @@ class HomeScreen extends ConsumerWidget {
                       color: FinanxperColors.textSecondary,
                       letterSpacing: 0.25,
                     ),
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                    overflow: TextOverflow.visible,
+                    softWrap: true,
                   ),
                 ),
               ],
