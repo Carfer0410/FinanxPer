@@ -4,6 +4,7 @@ import '../providers/gastos_provider.dart';
 import '../providers/presupuesto_provider.dart';
 import '../providers/currency_provider.dart';
 import 'currency_selection_screen.dart';
+import '../theme/app_theme.dart';
 
 /// Pantalla de configuraciones de la aplicación
 class ConfiguracionesScreen extends ConsumerWidget {
@@ -12,15 +13,29 @@ class ConfiguracionesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      backgroundColor: FinanxperColors.background,
       appBar: AppBar(
-        title: const Text('Configuraciones'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        title: const Text('⚙️ Configuraciones'),
+        backgroundColor: FinanxperColors.accent,
+        foregroundColor: FinanxperColors.textOnPrimary,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: FinanxperColors.accentGradient,
+          ),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () => _mostrarAyudaConfiguraciones(context),
-            tooltip: 'Información de Configuraciones',
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.info_outline, color: Colors.white),
+              onPressed: () => _mostrarAyudaConfiguraciones(context),
+              tooltip: 'Información de Configuraciones',
+            ),
           ),
         ],
       ),

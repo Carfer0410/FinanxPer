@@ -9,6 +9,7 @@ import '../models/gasto.dart';
 import '../widgets/month_year_selector.dart';
 import '../widgets/auto_save_indicator.dart';
 import '../utils/currency_input_formatter.dart';
+import '../theme/app_theme.dart';
 
 class HomeScreen extends ConsumerWidget {
   final Function(int)? onNavigateToTab;
@@ -45,49 +46,73 @@ class HomeScreen extends ConsumerWidget {
       ..removeWhere((key, value) => value <= 0);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: FinanxperColors.background,
       body: CustomScrollView(
         slivers: [
-          // AppBar con gradiente
+          // AppBar con gradiente hermoso
           SliverAppBar(
-            expandedHeight: 150,
+            expandedHeight: 180,
             pinned: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             actions: [
-              IconButton(
-                icon: const Icon(Icons.info_outline),
-                onPressed: () => _mostrarAyudaDashboard(context),
-                tooltip: 'Información del Dashboard',
+              Container(
+                margin: const EdgeInsets.only(right: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.info_outline, color: Colors.white),
+                  onPressed: () => _mostrarAyudaDashboard(context),
+                  tooltip: 'Información del Dashboard',
+                ),
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.blue[600]!,
-                      Colors.blue[400]!,
-                    ],
-                  ),
+                decoration: const BoxDecoration(
+                  gradient: FinanxperColors.heroGradient,
                 ),
-                child: SafeArea(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 5),
-                      Text(
-                        '💰 Panel Financiero',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withOpacity(0.1),
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.1),
+                      ],
+                    ),
+                  ),
+                  child: SafeArea(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                          ),
+                          child: const Text(
+                            '💰 Panel Financiero',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      const MonthYearSelector(),
-                      const SizedBox(height: 5),
-                    ],
+                        const SizedBox(height: 8),
+                        const MonthYearSelector(),
+                        const SizedBox(height: 4),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -381,36 +406,62 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildCardResumen(String titulo, String valor, Color color, IconData icono) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+    return Container(
+      decoration: BoxDecoration(
+        color: FinanxperColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: FinanxperColors.softShadow,
+        border: Border.all(color: color.withOpacity(0.2), width: 1),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withOpacity(0.05),
+              color.withOpacity(0.02),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icono, color: color, size: 24),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icono, color: color, size: 24),
+                ),
+                const SizedBox(width: 12),
                 Flexible(
                   child: Text(
                     titulo,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
+                      color: FinanxperColors.textSecondary,
+                      letterSpacing: 0.25,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               valor,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: color,
+                letterSpacing: 0.25,
               ),
             ),
           ],
@@ -436,7 +487,7 @@ class HomeScreen extends ConsumerWidget {
       // Caso normal: tiene presupuesto configurado
       titulo = 'Progreso';
       valor = '${(progresoTotal * 100).toStringAsFixed(0)}%';
-      color = progresoTotal <= 0.8 ? Colors.green : Colors.orange;
+      color = progresoTotal <= 0.8 ? FinanxperColors.success : FinanxperColors.warning;
       icono = Icons.donut_large;
     } else if (tieneGastos) {
       // Sin presupuesto pero tiene gastos: mostrar total gastado
@@ -446,46 +497,72 @@ class HomeScreen extends ConsumerWidget {
         symbol: '\$',
         decimalDigits: 0,
       ).format(totalGastado);
-      color = Colors.blue;
+      color = FinanxperColors.secondary;
       icono = Icons.account_balance_wallet;
     } else {
       // Sin presupuesto ni gastos
       titulo = 'Sin Actividad';
       valor = 'Añade un gasto';
-      color = Colors.grey;
+      color = FinanxperColors.textLight;
       icono = Icons.add_circle_outline;
     }
 
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+    return Container(
+      decoration: BoxDecoration(
+        color: FinanxperColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: FinanxperColors.softShadow,
+        border: Border.all(color: color.withOpacity(0.2), width: 1),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withOpacity(0.05),
+              color.withOpacity(0.02),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icono, color: color, size: 24),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icono, color: color, size: 24),
+                ),
+                const SizedBox(width: 12),
                 Flexible(
                   child: Text(
                     titulo,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
+                      color: FinanxperColors.textSecondary,
+                      letterSpacing: 0.25,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               valor,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: color,
+                letterSpacing: 0.25,
               ),
             ),
           ],
@@ -495,26 +572,53 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildBotonAccion(BuildContext context, String texto, IconData icono, Color color, VoidCallback onTap) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Icon(icono, color: color, size: 28),
-              const SizedBox(height: 8),
-              Text(
-                texto,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: FinanxperColors.softShadow,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withOpacity(0.1),
+                  color.withOpacity(0.05),
+                ],
               ),
-            ],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: color.withOpacity(0.3), width: 1),
+            ),
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(icono, color: color, size: 28),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  texto,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: FinanxperColors.textPrimary,
+                    letterSpacing: 0.25,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -547,17 +651,17 @@ class HomeScreen extends ConsumerWidget {
     final categoriaNormalizada = categoria.trim().toLowerCase();
     
     final colors = {
-      'comida': Colors.orange,
-      'transporte': Colors.blue,
-      'entretenimiento': Colors.purple,
-      'vivienda': Colors.green,
-      'salud': Colors.red,
-      'educación': Colors.indigo,
-      'educacion': Colors.indigo, // Sin acento también
-      'ropa': Colors.pink,
-      'tecnología': Colors.cyan,
-      'tecnologia': Colors.cyan, // Sin acento también
-      'otros': Colors.grey,
+      'comida': FinanxperColors.warning,
+      'transporte': FinanxperColors.secondary,
+      'entretenimiento': FinanxperColors.accent,
+      'vivienda': FinanxperColors.success,
+      'salud': FinanxperColors.error,
+      'educación': FinanxperColors.secondaryDark,
+      'educacion': FinanxperColors.secondaryDark, // Sin acento también
+      'ropa': const Color(0xFFE84393), // Rosa coral
+      'tecnología': FinanxperColors.primaryLight,
+      'tecnologia': FinanxperColors.primaryLight, // Sin acento también
+      'otros': FinanxperColors.textSecondary,
     };
     
     // Primero intentar con el nombre original
@@ -570,14 +674,14 @@ class HomeScreen extends ConsumerWidget {
     
     // Si no encuentra la categoría, usar colores predefinidos basados en hash
     final coloresAlternativos = [
-      Colors.deepOrange,
-      Colors.teal,
-      Colors.amber,
-      Colors.deepPurple,
-      Colors.lime,
-      Colors.redAccent,
-      Colors.blueGrey,
-      Colors.brown,
+      FinanxperColors.primary,
+      FinanxperColors.secondary,
+      FinanxperColors.accent,
+      FinanxperColors.warning,
+      FinanxperColors.error,
+      FinanxperColors.primaryDark,
+      FinanxperColors.secondaryLight,
+      FinanxperColors.accentLight,
     ];
     
     final index = categoria.hashCode.abs() % coloresAlternativos.length;

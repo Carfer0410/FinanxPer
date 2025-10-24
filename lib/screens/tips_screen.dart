@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/gastos_provider.dart';
+import '../theme/app_theme.dart';
 
 // Variable global para premium (futura monetización)
 bool isPremium = false;
@@ -78,15 +79,33 @@ class _TipsScreenState extends ConsumerState<TipsScreen> {
     final tipsPersonalizados = _getTipsPersonalizados(categoriaTop);
 
     return Scaffold(
+      backgroundColor: FinanxperColors.background,
       appBar: AppBar(
-        title: const Text('Tips Anti-Deudas'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        title: const Text('💡 Tips Anti-Deudas'),
+        backgroundColor: FinanxperColors.warning,
+        foregroundColor: FinanxperColors.textOnPrimary,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [FinanxperColors.warning, FinanxperColors.accent],
+            ),
+          ),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () => _mostrarAyudaTips(context),
-            tooltip: 'Información de Tips',
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.info_outline, color: Colors.white),
+              onPressed: () => _mostrarAyudaTips(context),
+              tooltip: 'Información de Tips',
+            ),
           ),
         ],
       ),

@@ -14,6 +14,7 @@ import 'screens/tips_screen.dart';
 import 'screens/configuraciones_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'widgets/global_notification_listener.dart';
+import 'theme/app_theme.dart';
 
 // Plugin de notificaciones locales
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -67,16 +68,9 @@ class FinanxperApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Finanxper',
+      title: 'FinanxPer - Gestión Financiera Personal',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1976D2), // Azul principal
-          secondary: const Color(0xFF4CAF50), // Verde éxito
-          brightness: Brightness.light,
-        ),
-      ),
+      theme: FinanxperTheme.lightTheme,
       locale: const Locale('es', 'ES'),
       home: const AppStartScreen(),
       routes: {

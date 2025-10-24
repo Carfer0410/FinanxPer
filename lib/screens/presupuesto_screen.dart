@@ -6,6 +6,7 @@ import '../providers/currency_provider.dart';
 import '../providers/date_provider.dart';
 import '../widgets/month_year_selector.dart';
 import '../utils/currency_input_formatter.dart';
+import '../theme/app_theme.dart';
 
 /// Pantalla para gestionar presupuestos con sliders funcionales
 class PresupuestoScreen extends ConsumerWidget {
@@ -47,15 +48,33 @@ class PresupuestoScreen extends ConsumerWidget {
     final progresoTotal = presupuestoTotal > 0 ? (totalGastado / presupuestoTotal) : 0.0;
 
     return Scaffold(
+      backgroundColor: FinanxperColors.background,
       appBar: AppBar(
-        title: const Text('Mi Presupuesto'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        title: const Text('💰 Mi Presupuesto'),
+        backgroundColor: FinanxperColors.success,
+        foregroundColor: FinanxperColors.textOnPrimary,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [FinanxperColors.success, FinanxperColors.primary],
+            ),
+          ),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () => _mostrarAyudaPresupuesto(context),
-            tooltip: 'Información de Presupuesto',
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.info_outline, color: Colors.white),
+              onPressed: () => _mostrarAyudaPresupuesto(context),
+              tooltip: 'Información de Presupuesto',
+            ),
           ),
         ],
       ),
@@ -67,6 +86,7 @@ class PresupuestoScreen extends ConsumerWidget {
             // Selector de mes/año con funcionalidad de copia
             MonthYearSelector(
               showCopyButton: true,
+              isOnGradientBackground: false,
               onCopyFromPrevious: () {
                 final presupuestoNotifier = ref.read(presupuestoProvider.notifier);
                 final currentMonthKey = ref.read(currentMonthKeyProvider);

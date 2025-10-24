@@ -8,6 +8,7 @@ import '../providers/date_provider.dart';
 import '../models/gasto.dart';
 import '../widgets/month_year_selector.dart';
 import '../utils/currency_input_formatter.dart';
+import '../theme/app_theme.dart';
 
 /// Pantalla para gestionar gastos con validación estricta de presupuesto
 class GastosScreen extends ConsumerStatefulWidget {
@@ -48,15 +49,29 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
     final gastos = ref.watch(gastosDelMesSeleccionadoProvider);
 
     return Scaffold(
+      backgroundColor: FinanxperColors.background,
       appBar: AppBar(
-        title: const Text('Mis Gastos'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        title: const Text('💸 Mis Gastos'),
+        backgroundColor: FinanxperColors.primary,
+        foregroundColor: FinanxperColors.textOnPrimary,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: FinanxperColors.primaryGradient,
+          ),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () => _mostrarAyudaGastos(context),
-            tooltip: 'Información de Mis Gastos',
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.info_outline, color: Colors.white),
+              onPressed: () => _mostrarAyudaGastos(context),
+              tooltip: 'Información de Mis Gastos',
+            ),
           ),
         ],
       ),
@@ -70,6 +85,7 @@ class _GastosScreenState extends ConsumerState<GastosScreen> {
                 // Selector de mes/año
                 const MonthYearSelector(
                   showCopyButton: false,
+                  isOnGradientBackground: false,
                 ),
                 
                 const SizedBox(height: 8),

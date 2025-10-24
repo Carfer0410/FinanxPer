@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/date_provider.dart';
+import '../theme/app_theme.dart';
 
 /// Widget selector de mes/año con navegación temporal
 class MonthYearSelector extends ConsumerWidget {
   final bool showCopyButton;
   final VoidCallback? onCopyFromPrevious;
+  final bool isOnGradientBackground;
 
   const MonthYearSelector({
     super.key,
     this.showCopyButton = false,
     this.onCopyFromPrevious,
+    this.isOnGradientBackground = true,
   });
 
   @override
@@ -18,26 +21,70 @@ class MonthYearSelector extends ConsumerWidget {
     final displayText = ref.watch(currentDisplayTextProvider);
     final dateNotifier = ref.watch(dateSelectionProvider.notifier);
     
-    return Card(
-      elevation: 2,
+    // Colores adaptativos según el fondo
+    final backgroundColor = isOnGradientBackground 
+        ? Colors.white.withOpacity(0.15)
+        : FinanxperColors.surface;
+    final borderColor = isOnGradientBackground 
+        ? Colors.white.withOpacity(0.3)
+        : FinanxperColors.primary.withOpacity(0.3);
+    final iconBackgroundColor = isOnGradientBackground 
+        ? Colors.white.withOpacity(0.2)
+        : FinanxperColors.primary.withOpacity(0.1);
+    final iconColor = isOnGradientBackground 
+        ? Colors.white
+        : FinanxperColors.primary;
+    final textColor = isOnGradientBackground 
+        ? Colors.white
+        : FinanxperColors.textPrimary;
+    final buttonBackgroundColor = isOnGradientBackground 
+        ? Colors.white.withOpacity(0.1)
+        : FinanxperColors.primary.withOpacity(0.1);
+    
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: borderColor),
+        boxShadow: isOnGradientBackground ? [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ] : FinanxperColors.softShadow,
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             // Icono de calendario
-            Icon(
-              Icons.calendar_month,
-              color: Theme.of(context).colorScheme.primary,
-              size: 24,
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: iconBackgroundColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.calendar_month,
+                color: iconColor,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             
             // Botón mes anterior
-            IconButton(
-              onPressed: () => dateNotifier.previousMonth(),
-              icon: const Icon(Icons.chevron_left),
-              tooltip: 'Mes anterior',
+            Container(
+              decoration: BoxDecoration(
+                color: buttonBackgroundColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: IconButton(
+                onPressed: () => dateNotifier.previousMonth(),
+                icon: Icon(Icons.chevron_left, color: iconColor),
+                tooltip: 'Mes anterior',
+              ),
             ),
             
             // Texto del mes actual con gesto para selector
@@ -49,9 +96,11 @@ class MonthYearSelector extends ConsumerWidget {
                   child: Text(
                     displayText,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: textColor,
+                      fontSize: 16,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
@@ -59,30 +108,39 @@ class MonthYearSelector extends ConsumerWidget {
             ),
             
             // Botón mes siguiente (solo si no es futuro)
-            IconButton(
-              onPressed: dateNotifier.canGoToNextMonth() 
-                  ? () => dateNotifier.nextMonth()
-                  : null,
-              icon: const Icon(Icons.chevron_right),
-              tooltip: 'Mes siguiente',
+            Container(
+              decoration: BoxDecoration(
+                color: buttonBackgroundColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: IconButton(
+                onPressed: dateNotifier.canGoToNextMonth() 
+                    ? () => dateNotifier.nextMonth()
+                    : null,
+                icon: Icon(
+                  Icons.chevron_right, 
+                  color: dateNotifier.canGoToNextMonth() 
+                      ? iconColor 
+                      : iconColor.withOpacity(0.5),
+                ),
+                tooltip: 'Mes siguiente',
+              ),
             ),
             
             // Botón ir al mes actual
             if (!dateNotifier.isCurrentMonth())
               IconButton(
                 onPressed: () => dateNotifier.goToCurrentMonth(),
-                icon: const Icon(Icons.today),
+                icon: Icon(Icons.today, color: iconColor),
                 tooltip: 'Ir al mes actual',
-                color: Theme.of(context).colorScheme.secondary,
               ),
             
             // Botón copiar del mes anterior (opcional)
             if (showCopyButton && onCopyFromPrevious != null)
               IconButton(
                 onPressed: onCopyFromPrevious,
-                icon: const Icon(Icons.copy),
+                icon: Icon(Icons.copy, color: iconColor),
                 tooltip: 'Copiar del mes anterior',
-                color: Colors.green,
               ),
           ],
         ),
