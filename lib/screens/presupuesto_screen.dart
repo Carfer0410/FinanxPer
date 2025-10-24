@@ -145,16 +145,55 @@ class PresupuestoScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    Slider(
-                      value: presupuestoTotal.clamp(0.0, currentCurrency.maxBudgetTotal),
-                      min: 0,
-                      max: currentCurrency.maxBudgetTotal,
-                      divisions: currentCurrency.budgetDivisions,
-                      label: presupuestoTotalFormateado,
-                      onChanged: (value) async {
-                        final monthKey = ref.read(currentMonthKeyProvider);
-                        await ref.read(presupuestoProvider.notifier).setPresupuestoMesSeleccionado(monthKey, 'total', value);
-                      },
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        // Track (línea del slider)
+                        activeTrackColor: FinanxperColors.primary,
+                        inactiveTrackColor: FinanxperColors.primary.withOpacity(0.3),
+                        trackHeight: 6.0,
+                        
+                        // Thumb (punto deslizante)
+                        thumbColor: FinanxperColors.primary,
+                        thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 12.0,
+                          pressedElevation: 8.0,
+                        ),
+                        
+                        // Overlay (efecto al tocar)
+                        overlayColor: FinanxperColors.primary.withOpacity(0.2),
+                        overlayShape: const RoundSliderOverlayShape(
+                          overlayRadius: 20.0,
+                        ),
+                        
+                        // Marcadores de división
+                        tickMarkShape: const RoundSliderTickMarkShape(
+                          tickMarkRadius: 3.0,
+                        ),
+                        activeTickMarkColor: FinanxperColors.primary,
+                        inactiveTickMarkColor: FinanxperColors.primary.withOpacity(0.3),
+                        
+                        // Etiqueta de valor
+                        valueIndicatorColor: FinanxperColors.primary,
+                        valueIndicatorTextStyle: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        valueIndicatorShape: const PaddleSliderValueIndicatorShape(),
+                        
+                        // Track shape personalizado para bordes redondeados
+                        trackShape: const RoundedRectSliderTrackShape(),
+                      ),
+                      child: Slider(
+                        value: presupuestoTotal.clamp(0.0, currentCurrency.maxBudgetTotal),
+                        min: 0,
+                        max: currentCurrency.maxBudgetTotal,
+                        divisions: currentCurrency.budgetDivisions,
+                        label: presupuestoTotalFormateado,
+                        onChanged: (value) async {
+                          final monthKey = ref.read(currentMonthKeyProvider);
+                          await ref.read(presupuestoProvider.notifier).setPresupuestoMesSeleccionado(monthKey, 'total', value);
+                        },
+                      ),
                     ),
                     Text(
                       'Usa el botón de editar para montos mayores a ${currentCurrency.formatAmount(currentCurrency.maxBudgetTotal)}',
