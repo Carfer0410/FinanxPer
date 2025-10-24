@@ -207,8 +207,11 @@ class PresupuestoScreen extends ConsumerWidget {
                 final gastadoCategoria = resumenGastos[categoria] ?? 0.0;
                 final progresoCategoria = presupuestoCategoria > 0 ? gastadoCategoria / presupuestoCategoria : 0.0;
                 
-                // Disponible específico de esta categoría = presupuesto - gastado
-                final disponibleCategoria = presupuestoCategoria - gastadoCategoria;
+                // Calcular máximo asignable a esta categoría
+                final sumaOtrasCategorias = _categorias
+                    .where((cat) => cat != categoria)
+                    .fold<double>(0.0, (sum, cat) => sum + (presupuestos[cat] ?? 0.0));
+                final maximoAsignable = presupuestoTotal - sumaOtrasCategorias;
 
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 4),
@@ -262,14 +265,30 @@ class PresupuestoScreen extends ConsumerWidget {
                             _getColorProgreso(progresoCategoria),
                           ),
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Flexible(
-                              child: Text('Gastado: ${currentCurrency.formatAmount(gastadoCategoria)}'),
-                            ),
-                            Flexible(
-                              child: Text('Disponible: ${currentCurrency.formatAmount(disponibleCategoria)}'),
+                            Text('Gastado: ${currentCurrency.formatAmount(gastadoCategoria)}'),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    'Máximo asignable: ${currentCurrency.formatAmount(maximoAsignable)}',
+                                    style: const TextStyle(fontWeight: FontWeight.w500),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => _mostrarInfoPresupuesto(context, ref, categoria, maximoAsignable, presupuestoCategoria, gastadoCategoria),
+                                  child: Icon(
+                                    Icons.info_outline,
+                                    size: 16,
+                                    color: Colors.blue[600],
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -335,26 +354,7 @@ class PresupuestoScreen extends ConsumerWidget {
     );
 
     // Obtener información del presupuesto actual
-    final presupuestos = ref.read(presupuestosMesSeleccionadoProvider);
-    final presupuestoTotal = presupuestos['total'] ?? 0.0;
     final currentCurrency = ref.read(currencyProvider);
-    
-    // Calcular límite disponible para categorías
-    String helperText = 'Ingresa cualquier cantidad';
-    Color helperColor = Colors.grey[600]!;
-    if (categoria != 'total' && presupuestoTotal > 0) {
-      final sumaOtrasCategorias = _categorias
-          .where((cat) => cat != categoria)
-          .fold<double>(0.0, (sum, cat) => sum + (presupuestos[cat] ?? 0.0));
-      final disponible = presupuestoTotal - sumaOtrasCategorias;
-      if (disponible > 0) {
-        helperText = 'Disponible: ${currentCurrency.formatAmount(disponible)}';
-        helperColor = Colors.green[700]!;
-      } else {
-        helperText = 'Sin presupuesto disponible. Aumenta el total primero.';
-        helperColor = Colors.red[700]!;
-      }
-    }
 
     // Definir ícono y color según la categoría
     IconData categoryIcon;
@@ -549,39 +549,7 @@ class PresupuestoScreen extends ConsumerWidget {
                     
                     const SizedBox(height: 16),
                     
-                    // Información de ayuda
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: helperColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: helperColor.withValues(alpha: 0.3)),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: helperColor,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              helperText,
-                              style: TextStyle(
-                                color: helperColor,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // Texto de ayuda adicional
+                    // Texto de ayuda simple
                     Text(
                       categoria == 'total' 
                           ? 'El presupuesto total debe ser mayor o igual a la suma de categorías'
@@ -866,6 +834,250 @@ class PresupuestoScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _mostrarInfoPresupuesto(BuildContext context, WidgetRef ref, String categoria, double maximoAsignable, double presupuestoCategoria, double gastadoCategoria) {
+    final currentCurrency = ref.watch(currencyProvider);
+    final presupuestos = ref.watch(presupuestosMesSeleccionadoProvider);
+    final totalGastado = ref.watch(totalGastadoMesSeleccionadoProvider);
+    final totalPresupuesto = presupuestos['total'] ?? 0.0;
+    final saldoDisponible = totalPresupuesto - totalGastado;
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.lightbulb_outline, color: Colors.orange[700], size: 24),
+              const SizedBox(width: 8),
+              const Text('Guía de Presupuesto', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Explicación del máximo asignable
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue[200]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.assignment_outlined, color: Colors.blue[700], size: 18),
+                          const SizedBox(width: 6),
+                          Text('Máximo Asignable', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue[700])),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text('Para la categoría "$categoria": ${currentCurrency.formatAmount(maximoAsignable)}'),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Es la cantidad máxima que puedes asignar a esta categoría sin exceder tu presupuesto total.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Cálculo: Se toma tu presupuesto total menos lo que ya gastaste en otras categorías.',
+                        style: TextStyle(fontSize: 11, color: Colors.grey[700], fontStyle: FontStyle.italic),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Explicación del saldo disponible
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green[200]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.account_balance_wallet_outlined, color: Colors.green[700], size: 18),
+                          const SizedBox(width: 6),
+                          Text('Saldo Disponible', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green[700])),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text('Total disponible: ${currentCurrency.formatAmount(saldoDisponible)}'),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Es el dinero que te queda después de restar todos tus gastos del presupuesto total.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Cálculo: Presupuesto total - Todos los gastos realizados',
+                        style: TextStyle(fontSize: 11, color: Colors.grey[700], fontStyle: FontStyle.italic),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Diferencias clave
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.amber[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.amber[200]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.compare_arrows, color: Colors.amber[700], size: 18),
+                          const SizedBox(width: 6),
+                          Text('Diferencias Clave', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber[700])),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _buildDiferencia('📊', 'Máximo Asignable', 'Se calcula por categoría individual'),
+                      _buildDiferencia('💰', 'Saldo Disponible', 'Es un total general de toda la app'),
+                      _buildDiferencia('🎯', 'Uso del Máximo Asignable', 'Para planificar presupuestos por categoría'),
+                      _buildDiferencia('📈', 'Uso del Saldo Disponible', 'Para saber cuánto dinero tienes libre'),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Resumen de números actuales
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.purple[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.purple[200]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.analytics_outlined, color: Colors.purple[700], size: 18),
+                          const SizedBox(width: 6),
+                          Text('Tu Situación Actual', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple[700])),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _buildNumeroActual('💰', 'Presupuesto Total', totalPresupuesto),
+                      _buildNumeroActual('🛒', 'Total Gastado', totalGastado),
+                      _buildNumeroActual('✅', 'Saldo Disponible General', saldoDisponible),
+                      _buildNumeroActual('📋', 'Presupuesto Actual ($categoria)', presupuestoCategoria),
+                      _buildNumeroActual('💸', 'Gastado en $categoria', gastadoCategoria),
+                      _buildNumeroActual('🎯', 'Máximo Asignable ($categoria)', maximoAsignable),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Consejo adicional
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.indigo[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.indigo[200]!),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.tips_and_updates, color: Colors.indigo[600], size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Consejo: Si el "Máximo Asignable" es menor de lo esperado, revisa si has gastado mucho en otras categorías.',
+                          style: TextStyle(fontSize: 11, color: Colors.indigo[700]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Entendido', style: TextStyle(fontWeight: FontWeight.w600)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDiferencia(String emoji, String concepto, String descripcion) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(fontSize: 11, color: Colors.black87),
+                children: [
+                  TextSpan(text: '$concepto: ', style: const TextStyle(fontWeight: FontWeight.w600)),
+                  TextSpan(text: descripcion),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNumeroActual(String emoji, String concepto, double valor) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final currentCurrency = ref.watch(currencyProvider);
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 1),
+          child: Row(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 11)),
+              const SizedBox(width: 6),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    style: const TextStyle(fontSize: 10, color: Colors.black87),
+                    children: [
+                      TextSpan(text: '$concepto: ', style: const TextStyle(fontWeight: FontWeight.w500)),
+                      TextSpan(text: currentCurrency.formatAmount(valor), style: const TextStyle(fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

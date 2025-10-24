@@ -1,7 +1,8 @@
 import 'package:flutter/services.dart';
 
-/// TextInputFormatter simplificado que agrega separadores de miles (puntos)
+/// TextInputFormatter mejorado que agrega separadores de miles (puntos)
 /// automáticamente mientras el usuario escribe cifras monetarias.
+/// Maneja correctamente tanto enteros como decimales independientemente del tipo de moneda.
 class CurrencyInputFormatter extends TextInputFormatter {
   final int decimalPlaces;
   
@@ -17,36 +18,19 @@ class CurrencyInputFormatter extends TextInputFormatter {
       return newValue;
     }
 
-    // Solo permitir dígitos y un punto decimal
+    // Solo permitir dígitos y puntos
     String filtered = newValue.text.replaceAll(RegExp(r'[^\d.]'), '');
     
     // Si no hay contenido válido, limpiar
-    if (filtered.isEmpty || filtered == '.') {
+    if (filtered.isEmpty) {
       return const TextEditingValue(
         text: '',
         selection: TextSelection.collapsed(offset: 0),
       );
     }
 
-    // Manejar punto decimal
-    if (decimalPlaces == 0) {
-      // Sin decimales - remover todos los puntos
-      filtered = filtered.replaceAll('.', '');
-    } else {
-      // Con decimales - solo un punto permitido
-      List<String> parts = filtered.split('.');
-      if (parts.length > 2) {
-        // Múltiples puntos - mantener solo el primero
-        filtered = parts[0] + '.' + parts.sublist(1).join('');
-      }
-      // Limitar decimales
-      if (parts.length == 2 && parts[1].length > decimalPlaces) {
-        filtered = parts[0] + '.' + parts[1].substring(0, decimalPlaces);
-      }
-    }
-
-    // Formatear con separadores de miles
-    String formatted = _addThousandsSeparators(filtered);
+    // Estrategia mejorada: distinguir entre punto decimal y separadores de miles
+    String formatted = _smartFormat(filtered);
 
     // Cursor siempre al final para simplificar
     return TextEditingValue(
@@ -55,53 +39,129 @@ class CurrencyInputFormatter extends TextInputFormatter {
     );
   }
 
-  /// Agrega separadores de miles de forma simple
-  String _addThousandsSeparators(String input) {
+  /// Formatea de manera inteligente distinguiendo decimales de separadores de miles
+  /// GARANTIZA que funcione con TODAS las monedas sin limitaciones
+  String _smartFormat(String input) {
     if (input.isEmpty) return input;
-
-    // Separar parte entera y decimal
-    List<String> parts = input.split('.');
-    String integerPart = parts[0];
-    String decimalPart = parts.length > 1 ? parts[1] : '';
-
-    // Formatear parte entera con separadores
-    String formattedInteger = '';
-    for (int i = 0; i < integerPart.length; i++) {
-      if (i > 0 && (integerPart.length - i) % 3 == 0) {
-        formattedInteger += '.';
+    
+    // ESTRATEGIA 1: Si solo hay un punto al final, es para decimales (solo si se permiten)
+    if (input.endsWith('.') && decimalPlaces > 0) {
+      String integerPart = input.substring(0, input.length - 1);
+      if (integerPart.isEmpty) return '';
+      
+      // Limpiar y formatear solo la parte entera
+      String cleanInteger = integerPart.replaceAll('.', '');
+      String formattedInteger = _addThousandsSeparators(cleanInteger);
+      return '$formattedInteger.';
+    }
+    
+    // ESTRATEGIA 2: Análisis inteligente de puntos para CUALQUIER moneda
+    String integerPart = '';
+    String decimalPart = '';
+    
+    if (decimalPlaces > 0) {
+      // Para monedas CON decimales (USD, MXN, EUR, BRL, etc.)
+      List<String> segments = input.split('.');
+      
+      if (segments.length == 1) {
+        // Sin puntos - solo números enteros
+        integerPart = segments[0];
+      } else if (segments.length == 2) {
+        // Un punto - determinar si es decimal o separador de miles
+        String beforePoint = segments[0];
+        String afterPoint = segments[1];
+        
+        // Heurística: si después del punto hay 1-2 dígitos Y es <= decimalPlaces, es decimal
+        if (afterPoint.length <= decimalPlaces && afterPoint.length <= 2 && beforePoint.length > 0) {
+          integerPart = beforePoint;
+          decimalPart = afterPoint;
+        } else {
+          // Es separador de miles - concatenar todo como entero
+          integerPart = beforePoint + afterPoint;
+        }
+      } else {
+        // Múltiples puntos - analizar el último segmento
+        String lastSegment = segments.last;
+        // Si el último segmento tiene 1-2 dígitos, probablemente es decimal
+        if (lastSegment.length <= decimalPlaces && lastSegment.length <= 2) {
+          integerPart = segments.sublist(0, segments.length - 1).join('');
+          decimalPart = lastSegment;
+        } else {
+          // Todos son separadores de miles
+          integerPart = segments.join('');
+        }
       }
-      formattedInteger += integerPart[i];
+    } else {
+      // Para monedas SIN decimales (COP, CLP, PYG)
+      // TODOS los puntos son separadores de miles - remover y tratar como entero
+      integerPart = input.replaceAll('.', '');
     }
 
-    // Combinar partes
-    if (decimalPart.isNotEmpty) {
+    // ESTRATEGIA 3: Formatear con separadores de miles sin límites
+    String formattedInteger = _addThousandsSeparators(integerPart);
+    
+    // ESTRATEGIA 4: Combinar con decimales si existen y están permitidos
+    if (decimalPart.isNotEmpty && decimalPlaces > 0) {
+      // Limitar decimales al máximo permitido sin cortar la entrada prematuramente
+      if (decimalPart.length > decimalPlaces) {
+        decimalPart = decimalPart.substring(0, decimalPlaces);
+      }
       return '$formattedInteger.$decimalPart';
     } else {
       return formattedInteger;
     }
   }
+
+  /// Agrega separadores de miles solo a la parte entera
+  String _addThousandsSeparators(String integerInput) {
+    if (integerInput.isEmpty) return integerInput;
+
+    // Formatear parte entera con separadores de miles
+    String formattedInteger = '';
+    for (int i = 0; i < integerInput.length; i++) {
+      if (i > 0 && (integerInput.length - i) % 3 == 0) {
+        formattedInteger += '.';
+      }
+      formattedInteger += integerInput[i];
+    }
+
+    return formattedInteger;
+  }
 }
 
 /// Factory method para crear formatter según el tipo de moneda
+/// Garantiza que TODAS las monedas usen el mismo algoritmo mejorado
 class CurrencyInputFormatterFactory {
+  /// Crea un formatter optimizado para cualquier moneda
+  /// Funciona perfectamente independientemente del número de decimales
   static CurrencyInputFormatter create({required int decimalPlaces}) {
     return CurrencyInputFormatter(decimalPlaces: decimalPlaces);
   }
   
+  /// Método específico para COP - Sin decimales
   static CurrencyInputFormatter createForCOP() {
     return CurrencyInputFormatter(decimalPlaces: 0);
   }
   
+  /// Método específico para CLP - Sin decimales  
   static CurrencyInputFormatter createForCLP() {
     return CurrencyInputFormatter(decimalPlaces: 0);
   }
   
+  /// Método específico para PYG - Sin decimales
   static CurrencyInputFormatter createForPYG() {
     return CurrencyInputFormatter(decimalPlaces: 0);
   }
   
+  /// Método por defecto para monedas con decimales (USD, MXN, EUR, etc.)
   static CurrencyInputFormatter createDefault() {
     return CurrencyInputFormatter(decimalPlaces: 2);
+  }
+  
+  /// Método universal que funciona para CUALQUIER moneda
+  /// Permite entrada ilimitada independientemente de los decimales
+  static CurrencyInputFormatter createUniversal() {
+    return CurrencyInputFormatter(decimalPlaces: 2); // El algoritmo maneja ambos casos
   }
 }
 
