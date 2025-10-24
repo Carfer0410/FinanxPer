@@ -352,16 +352,20 @@ final gastosPorCategoriaProvider = Provider<Map<String, String>>((ref) {
 
 /// Provider para gastos del mes seleccionado
 final gastosDelMesSeleccionadoProvider = Provider<List<Gasto>>((ref) {
-  final gastosNotifier = ref.watch(gastosProvider.notifier);
+  final gastos = ref.watch(gastosProvider);
   final monthKey = ref.watch(currentMonthKeyProvider);
-  return gastosNotifier.getGastosPorMes(monthKey);
+  
+  // Filtrar gastos por el mes seleccionado
+  return gastos.where((gasto) {
+    final gastoKey = '${gasto.fecha.year}-${gasto.fecha.month.toString().padLeft(2, '0')}';
+    return gastoKey == monthKey;
+  }).toList();
 });
 
 /// Provider para total gastado del mes seleccionado
 final totalGastadoMesSeleccionadoProvider = Provider<double>((ref) {
-  final gastosNotifier = ref.watch(gastosProvider.notifier);
-  final monthKey = ref.watch(currentMonthKeyProvider);
-  return gastosNotifier.getTotalGastadoPorMes(monthKey);
+  final gastosDelMes = ref.watch(gastosDelMesSeleccionadoProvider);
+  return gastosDelMes.fold<double>(0.0, (sum, gasto) => sum + gasto.monto);
 });
 
 /// Provider para total gastado formateado del mes seleccionado
@@ -373,21 +377,28 @@ final totalGastadoMesSeleccionadoFormateadoProvider = Provider<String>((ref) {
 
 /// Provider para resumen de categorías del mes seleccionado
 final resumenCategoriasMesSeleccionadoProvider = Provider<Map<String, double>>((ref) {
-  final gastosNotifier = ref.watch(gastosProvider.notifier);
-  final monthKey = ref.watch(currentMonthKeyProvider);
-  return gastosNotifier.getResumenCategoriasPorMes(monthKey);
+  final gastosDelMes = ref.watch(gastosDelMesSeleccionadoProvider);
+  
+  final Map<String, double> resumen = {};
+  for (final gasto in gastosDelMes) {
+    resumen[gasto.categoria] = (resumen[gasto.categoria] ?? 0.0) + gasto.monto;
+  }
+  return resumen;
 });
 
 /// Provider para gastos recientes del mes seleccionado
 final gastosRecientesMesSeleccionadoProvider = Provider<List<Gasto>>((ref) {
-  final gastosNotifier = ref.watch(gastosProvider.notifier);
-  final monthKey = ref.watch(currentMonthKeyProvider);
-  return gastosNotifier.getGastosRecientesPorMes(monthKey);
+  final gastosDelMes = ref.watch(gastosDelMesSeleccionadoProvider);
+  
+  // Ordenar por fecha descendente y tomar los más recientes
+  final gastosOrdenados = List<Gasto>.from(gastosDelMes)
+    ..sort((a, b) => b.fecha.compareTo(a.fecha));
+  
+  return gastosOrdenados.take(10).toList();
 });
 
 /// Provider para verificar si el mes seleccionado tiene gastos
 final mesSeleccionadoTieneGastosProvider = Provider<bool>((ref) {
-  final gastosNotifier = ref.watch(gastosProvider.notifier);
-  final monthKey = ref.watch(currentMonthKeyProvider);
-  return gastosNotifier.mestieneGastos(monthKey);
+  final gastosDelMes = ref.watch(gastosDelMesSeleccionadoProvider);
+  return gastosDelMes.isNotEmpty;
 });
